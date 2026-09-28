@@ -88,6 +88,9 @@ function initStory(scene) {
       window.__charm = {
         getView: () => ({ ...scene.view }),
         getBounds: () => scene.getScreenBounds(),
+        kick: (fx, fz) => scene.kick(fx, fz),
+        getRope: () => scene.getRope(),
+        nodePx: (i) => scene.nodePx(i),
       };
     }
     const view = scene.view;

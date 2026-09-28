@@ -23,6 +23,8 @@ index.html          # seluruh teks/section (10 section) + loader + progress bar
 src/main.js         # bootstrap, timeline GSAP ScrollTrigger, reveal teks
 src/scene.js        # three.js: renderer, lighting, load GLB, resize, dispose
 src/sections.js     # cameraKeyframes (posisi kamera / rotasi per section)
+src/rope.js         # fisika tali Verlet (gantungan charm: gravitasi, gust, whip)
+src/softbody.js     # skin bone-tali di shader (mesh melengkung ikut kurva tali)
 src/style.css       # tema pastel dreamy, layout, responsif
 public/charm-opt.glb  # model 3D
 ```

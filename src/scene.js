@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
-import { createCharmPhysics } from "./physics.js";
-import { createSoftBody } from "./softbody.js";
+import { createRope } from "./rope.js";
+import { createSoftBody, BONE_COUNT } from "./softbody.js";
 
 // const MODEL_URL = '/charm-opt.glb';
 const MODEL_URL = "/charm-opt-2.glb";
@@ -133,9 +133,134 @@ export async function createScene({
     }
   });
 
-  // Soft-body: clone material + hook shader (bend kuadratik dari titik gantung)
+  // Skin bone-tali: mesh dideformasi mengikuti simulasi tali di bawah ini
   const soft = createSoftBody(gltf.scene, sway);
-  const physics = createCharmPhysics();
+  const rope = createRope({ segments: BONE_COUNT, length: TARGET_HEIGHT });
+
+  // --- Interaksi: sentuh / seret charm — pemain menarik tali langsung ------
+  const GRAB_R = window.matchMedia("(pointer: coarse)").matches ? 72 : 56; // px
+  const ndc = new THREE.Vector2();
+  const ray = new THREE.Raycaster();
+  const dragPlane = new THREE.Plane();
+  const camDir = new THREE.Vector3();
+  const nodeW = new THREE.Vector3();
+  const hitW = new THREE.Vector3();
+  const projP = new THREE.Vector3();
+  const sA = new THREE.Vector2();
+  const sB = new THREE.Vector2();
+  const dragVel = new THREE.Vector3();
+  const instV = new THREE.Vector3();
+  const lastHold = new THREE.Vector3();
+  let grabbing = -1;
+  let lastHoldT = 0;
+
+  function nodeScreen(i, out) {
+    projP.copy(rope.pos[i]).applyMatrix4(sway.matrixWorld).project(camera);
+    out.set(
+      (projP.x * 0.5 + 0.5) * window.innerWidth,
+      (-projP.y * 0.5 + 0.5) * window.innerHeight,
+    );
+    return out;
+  }
+
+  /** Node tali terdekat ke titik layar (jarak ke polilinah tali), -1 jika jauh. */
+  function pickNode(px, py) {
+    let bestD2 = GRAB_R * GRAB_R;
+    let bestI = -1;
+    for (let i = 0; i < rope.pos.length - 1; i++) {
+      nodeScreen(i, sA);
+      nodeScreen(i + 1, sB);
+      const abx = sB.x - sA.x;
+      const aby = sB.y - sA.y;
+      const t = Math.max(
+        0,
+        Math.min(
+          1,
+          ((px - sA.x) * abx + (py - sA.y) * aby) / (abx * abx + aby * aby || 1),
+        ),
+      );
+      const dx = sA.x + abx * t - px;
+      const dy = sA.y + aby * t - py;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        bestI = t < 0.5 ? i : i + 1;
+      }
+    }
+    if (bestI === 0) bestI = 1; // node 0 dipaku di klip
+    return bestI;
+  }
+
+  function moveTarget(px, py) {
+    ndc.set(
+      (px / window.innerWidth) * 2 - 1,
+      -(py / window.innerHeight) * 2 + 1,
+    );
+    ray.setFromCamera(ndc, camera);
+    if (!ray.ray.intersectPlane(dragPlane, hitW)) return;
+    sway.worldToLocal(hitW); // → ruang tali
+    rope.dragTo(hitW);
+    const t = performance.now() / 1000;
+    if (lastHoldT > 0) {
+      const dtv = Math.max(1e-3, t - lastHoldT);
+      instV.subVectors(hitW, lastHold).divideScalar(dtv);
+      const m = instV.length();
+      if (m > 8) instV.multiplyScalar(8 / m); // cegah spike
+      dragVel.lerp(instV, 0.45);
+    }
+    lastHold.copy(hitW);
+    lastHoldT = t;
+  }
+
+  function onPointerDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (
+      e.target instanceof Element &&
+      e.target.closest("a, button, input, textarea, select, label")
+    )
+      return;
+    const i = pickNode(e.clientX, e.clientY);
+    if (i < 0) return;
+    grabbing = i;
+    rope.grab(i);
+    camera.getWorldDirection(camDir);
+    nodeW.copy(rope.pos[i]).applyMatrix4(sway.matrixWorld);
+    dragPlane.setFromNormalAndCoplanarPoint(camDir, nodeW);
+    dragVel.set(0, 0, 0);
+    lastHoldT = 0;
+    moveTarget(e.clientX, e.clientY);
+    document.documentElement.style.cursor = "grabbing";
+    e.preventDefault(); // cegah seleksi teks saat menyeret
+  }
+
+  function onPointerMove(e) {
+    if (grabbing >= 0) {
+      moveTarget(e.clientX, e.clientY);
+      return;
+    }
+    document.documentElement.style.cursor =
+      pickNode(e.clientX, e.clientY) >= 0 ? "grab" : "";
+  }
+
+  function onPointerUp() {
+    if (grabbing < 0) return;
+    rope.release(dragVel); // fling: teruskan kecepatan seret
+    grabbing = -1;
+    dragVel.set(0, 0, 0);
+    lastHoldT = 0;
+    document.documentElement.style.cursor = "";
+  }
+
+  function onTouchMove(e) {
+    if (grabbing >= 0) e.preventDefault(); // jangan ikut scroll halaman
+  }
+
+  window.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+  window.addEventListener("blur", onPointerUp);
+  window.addEventListener("touchmove", onTouchMove, { passive: false });
 
   // --- State kamera yang digerakkan scroll ---------------------------------
   const view = {
@@ -182,6 +307,8 @@ export async function createScene({
   // --- Render loop (dijeda saat tab tidak aktif) ----------------------------
   let rafId = null;
   let last = performance.now();
+  let prevRotY = view.rotY;
+  let omega = 0; // kecepatan sudut rotY yang dihaluskan (untuk gaya fiktif)
 
   function frame(now) {
     rafId = requestAnimationFrame(frame);
@@ -191,13 +318,16 @@ export async function createScene({
     // supaya rotasi tiap section selalu deterministik.
     if (idleWeight > 0) idleAngle += dt * 0.32 * idleWeight;
     spinner.rotation.y = idleAngle * idleWeight;
-    // Soft-body: ayun pegas di titik gantung + lentur (bend) di shader
-    const s = physics.update(dt, view.cz);
-    sway.rotation.x = s.rx;
-    sway.rotation.z = s.rz;
     applyView();
+
+    // Fisika tali: ω rotasi scroll → Coriolis + centrifugal (ekor whip)
+    const rotV = dt > 0 ? (view.rotY - prevRotY) / dt : 0;
+    prevRotY = view.rotY;
+    omega += (THREE.MathUtils.clamp(rotV, -8, 8) - omega) * Math.min(1, dt * 8);
+    const bones = rope.update(dt, view.cz, omega);
+
     scene.updateMatrixWorld(true);
-    soft.update(s.bendX, s.bendZ);
+    soft.update(bones);
     renderer.render(scene, camera);
   }
 
@@ -237,6 +367,12 @@ export async function createScene({
     stop();
     window.removeEventListener("resize", onResize);
     document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("pointerdown", onPointerDown);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+    window.removeEventListener("blur", onPointerUp);
+    window.removeEventListener("touchmove", onTouchMove);
     scene.traverse((obj) => {
       if (!obj.isMesh) return;
       obj.geometry?.dispose();
@@ -288,6 +424,17 @@ export async function createScene({
     /** 0..1 — seberapa jauh scroll sudah berjalan (untuk putaran idle). */
     setScrollProgress(p) {
       idleWeight = Math.max(0, 1 - p * 9);
+    },
+    /** Dorongan manual ke tali (QA / hook). */
+    kick(fx = 0.8, fz = 0.2) {
+      rope.kick(fx, fz);
+    },
+    /** Posisi node tali (ruang tali) — QA interaksi. */
+    getRope: () => rope.pos.map((p) => [p.x, p.y, p.z]),
+    /** Posisi layar (px) sebuah node tali — QA interaksi. */
+    nodePx: (i) => {
+      const out = nodeScreen(i, new THREE.Vector2());
+      return [out.x, out.y];
     },
     dispose,
   };

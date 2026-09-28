@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { createCharmPhysics } from "./physics.js";
+import { createSoftBody } from "./softbody.js";
 
 // const MODEL_URL = '/charm-opt.glb';
 const MODEL_URL = "/charm-opt-2.glb";
@@ -111,8 +113,14 @@ export async function createScene({
 
   const spinner = new THREE.Group(); // rotasi idle (putaran pelan di hero)
   const pivot = new THREE.Group(); // rotasi dari scroll timeline
+  // sway = titik gantung soft-body: berada di puncak model (y = +1 pada pivot)
+  // dan jadi poros ayunan; spinner digeser -1 supaya model tetap di tengah.
+  const sway = new THREE.Group();
+  sway.position.y = TARGET_HEIGHT / 2;
+  spinner.position.y = -TARGET_HEIGHT / 2;
   spinner.add(upright);
-  pivot.add(spinner);
+  sway.add(spinner);
+  pivot.add(sway);
   scene.add(pivot);
   pivot.updateMatrixWorld(true);
 
@@ -124,6 +132,10 @@ export async function createScene({
       if (mat && "envMapIntensity" in mat) mat.envMapIntensity = 1.3;
     }
   });
+
+  // Soft-body: clone material + hook shader (bend kuadratik dari titik gantung)
+  const soft = createSoftBody(gltf.scene, sway);
+  const physics = createCharmPhysics();
 
   // --- State kamera yang digerakkan scroll ---------------------------------
   const view = {
@@ -179,7 +191,13 @@ export async function createScene({
     // supaya rotasi tiap section selalu deterministik.
     if (idleWeight > 0) idleAngle += dt * 0.32 * idleWeight;
     spinner.rotation.y = idleAngle * idleWeight;
+    // Soft-body: ayun pegas di titik gantung + lentur (bend) di shader
+    const s = physics.update(dt, view.cz);
+    sway.rotation.x = s.rx;
+    sway.rotation.z = s.rz;
     applyView();
+    scene.updateMatrixWorld(true);
+    soft.update(s.bendX, s.bendZ);
     renderer.render(scene, camera);
   }
 

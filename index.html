@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Pink Heart Charm — gantungan manik handmade bertema pastel pink. Cerita satu halaman dengan visualisasi 3D."
+    />
+    <meta name="theme-color" content="#fdeef4" />
+    <title>Pink Heart Charm — Gantungan Manik Handmade</title>
+  </head>
+  <body>
+    <div class="loader" id="loader">
+      <div class="loader__inner">
+        <div class="loader__ring" aria-hidden="true"></div>
+        <p class="loader__pct" id="loaderPct">0%</p>
+        <p class="loader__msg" id="loaderMsg">Menyiapkan charm…</p>
+        <button class="btn btn--ghost loader__retry" id="loaderRetry" hidden>Muat ulang</button>
+      </div>
+    </div>
+
+    <div class="progress" aria-hidden="true"><span class="progress__bar" id="progressBar"></span></div>
+
+    <canvas id="webgl" class="webgl"></canvas>
+    <div class="glow" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <span class="topbar__mark"></span>
+      <span class="topbar__text">Pink Heart Charm</span>
+    </header>
+
+    <main id="story">
+      <!-- 01 · HERO -->
+      <section class="sec sec--hero" data-side="left" id="sec-hero">
+        <div class="section-inner">
+          <p class="eyebrow">Handmade beaded charm</p>
+          <h1 class="hero-title">Pink Heart<br /><em>Charm</em></h1>
+          <p class="lead">Gantungan manik handmade</p>
+          <div class="scroll-hint" id="scrollHint">
+            <span class="scroll-hint__mouse" aria-hidden="true"><span></span></span>
+            <span class="scroll-hint__label">Scroll ke bawah</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 · TENTANG OBJEK -->
+      <section class="sec" data-side="right" id="sec-tentang">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">02 · Tentang objek</p>
+          <h2>Kecil, manis, dibuat tangan</h2>
+          <p>
+            Pink Heart Charm adalah gantungan manik buatan tangan dengan nuansa pastel pink —
+            dirangkai satu per satu, dari klip di atas sampai simpul benang di ujung bawah.
+          </p>
+          <p>
+            Bentuknya yang ringkas membuatnya fleksibel: gantung di tas, kunci, casing HP, atau
+            jadi gelang manik di pergelangan tangan.
+          </p>
+        </div>
+      </section>
+
+      <!-- 03 · KLIP -->
+      <section class="sec" data-side="left" id="sec-klip">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">03 · Klip</p>
+          <h2>Lobster clasp berputar</h2>
+          <p>
+            Di bagian paling atas ada klip lobster berenamel putih dengan sambungan swivel yang
+            bisa berputar bebas — supaya charm tidak mudah terpelintir ketika bergoyang.
+          </p>
+          <p class="note">Detail kamera: zoom ke puncak objek.</p>
+        </div>
+      </section>
+
+      <!-- 04 · RANTAI -->
+      <section class="sec" data-side="right" id="sec-rantai">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">04 · Rantai</p>
+          <h2>Curb chain akrilik</h2>
+          <p>
+            Rantai acrylic curb chain tebal berwarna emas transparan dengan kilau metalik hangat.
+            Ringannya plastik, tampilannya seperti logam — ringan di tas tapi tetap mewah.
+          </p>
+          <p class="note">Detail kamera: zoom ke jajaran mata rantai.</p>
+        </div>
+      </section>
+
+      <!-- 05 · MANIK ATAS -->
+      <section class="sec" data-side="left" id="sec-atas">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">05 · Manik atas</p>
+          <h2>Kelompok pastel pertama</h2>
+          <ul class="bead-list">
+            <li><span class="dot dot--pink"></span>Hati pink puffy yang glossy</li>
+            <li><span class="dot dot--blush"></span>Manik bulat pink kecil</li>
+            <li><span class="dot dot--pearl"></span>Manik mutiara putih</li>
+            <li><span class="dot dot--cream"></span>Manik kupu-kupu putih pearlescent</li>
+          </ul>
+          <p class="note">Detail kamera: kamera turun ke bawah klip.</p>
+        </div>
+      </section>
+
+      <!-- 06 · MANIK TENGAH -->
+      <section class="sec" data-side="right" id="sec-tengah">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">06 · Manik tengah</p>
+          <h2>Kontras lembut di tengah</h2>
+          <ul class="bead-list">
+            <li><span class="dot dot--maroon"></span>Manik pony merah tua</li>
+            <li><span class="dot dot--cream"></span>Manik bulat krem</li>
+            <li><span class="dot dot--lavender"></span>Manik pony lavender</li>
+          </ul>
+          <p class="note">Detail kamera: kamera turun lagi ke tengah rantai manik.</p>
+        </div>
+      </section>
+
+      <!-- 07 · MANIK UTAMA -->
+      <section class="sec" data-side="left" id="sec-utama">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">07 · Manik utama</p>
+          <h2>Hati besar, bintang utamanya</h2>
+          <p>
+            Manik hati besar berwarna pink, dengan bagian tengah hati pink tua yang menonjol dan
+            bingkai putih yang rapi. Ini titik berat sekaligus jantung desainnya.
+          </p>
+          <p class="note">Detail kamera: zoom dekat ke permukaan hati.</p>
+        </div>
+      </section>
+
+      <!-- 08 · UJUNG -->
+      <section class="sec" data-side="right" id="sec-ujung">
+        <div class="section-inner section-inner--card">
+          <p class="eyebrow">08 · Ujung</p>
+          <h2>Simpul penutup</h2>
+          <ul class="bead-list">
+            <li><span class="dot dot--blush"></span>Manik bulat pink kecil</li>
+            <li><span class="dot dot--pearl"></span>Manik mutiara iridescent</li>
+            <li><span class="dot dot--pink"></span>Simpul benang sutra pink</li>
+          </ul>
+          <p class="note">Detail kamera: kamera sampai ke ujung paling bawah.</p>
+        </div>
+      </section>
+
+      <!-- 09 · MATERIAL & BAHAN -->
+      <section class="sec sec--wide" data-side="center" id="sec-material">
+        <div class="section-inner section-inner--wide">
+          <p class="eyebrow">09 · Material &amp; bahan</p>
+          <h2>Dari apa ia dibuat</h2>
+          <div class="material-grid">
+            <article class="material-card">
+              <span class="material-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
+                  <path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
+                </svg>
+              </span>
+              <h3>Rantai akrilik</h3>
+              <p>Curb chain transparan keemasan, ringan namun kuat.</p>
+            </article>
+            <article class="material-card">
+              <span class="material-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z" />
+                  <path d="M19 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9z" />
+                </svg>
+              </span>
+              <h3>Plastik glossy</h3>
+              <p>Manik hati &amp; pony dengan permukaan mengilap.</p>
+            </article>
+            <article class="material-card">
+              <span class="material-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="7.2" />
+                  <path d="M8.6 9.6c.8-1.2 2-1.9 3.4-2.2" />
+                </svg>
+              </span>
+              <h3>Resin pearlescent</h3>
+              <p>Mutiara &amp; kupu-kupu dengan kilau mutiara lembut.</p>
+            </article>
+            <article class="material-card">
+              <span class="material-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 8c3 0 3 3.5 6 3.5S12 8 15 8s3 3.5 6 3.5" />
+                  <path d="M3 14.5c3 0 3 3.5 6 3.5s3-3.5 6-3.5 3 3.5 6 3.5" />
+                </svg>
+              </span>
+              <h3>Benang sutra / nylon</h3>
+              <p>Simpul penutup pink yang diikat rapat dengan tangan.</p>
+            </article>
+            <article class="material-card">
+              <span class="material-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" />
+                  <path d="M12 8.5l3 1.7v3.4L12 15.3l-3-1.7v-3.4L12 8.5z" />
+                </svg>
+              </span>
+              <h3>Logam enamel</h3>
+              <p>Klip lobster berenamel putih dengan sambungan swivel.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 · PENUTUP -->
+      <section class="sec sec--closing" data-side="center" id="sec-penutup">
+        <div class="section-inner section-inner--card section-inner--center">
+          <p class="eyebrow">10 · Penutup</p>
+          <h2>Satu putaran penuh</h2>
+          <p>
+            Dari klip sampai simpul — satu charm kecil yang dirangkai pelan-pelan. Terima kasih
+            sudah ikut menyusurinya.
+          </p>
+          <button class="btn" id="backToTop" type="button">Kembali ke atas</button>
+          <p class="colophon">Pink Heart Charm · dirangkai dengan tangan</p>
+        </div>
+      </section>
+    </main>
+
+    <noscript>
+      <div class="noscript">Halaman ini butuh JavaScript untuk menampilkan cerita 3D-nya.</div>
+    </noscript>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

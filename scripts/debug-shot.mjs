@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errs = [];
+page.on('pageerror', e => errs.push(e.message));
+page.on('console', m => { if (m.type()==='error') errs.push(m.text()); });
+await page.goto('http://localhost:5173/debug.html', { waitUntil: 'load' });
+await page.waitForTimeout(4000);
+await page.screenshot({ path: '/tmp/shots/debug.png' });
+await browser.close();
+console.log(errs.length ? errs.join('\n') : 'ok');
